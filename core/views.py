@@ -34,11 +34,7 @@ class Rules(APIView):
 		return Response('Rules')
 
 
-'''
 
-username : userId obtained from google or facebook
-
-'''
 
 class RegisterUser(APIView):
 
@@ -62,6 +58,62 @@ class RegisterUser(APIView):
 	
 
 
+'''
+
+def index(request):
+
+    m_level = models.total_level.objects.get(id=1)
+    lastlevel = m_level.totallevel
+    
+    user = request.user
+    print(user)
+    if user.is_authenticated:
+        player = models.player.objects.get(user_id=request.user.pk)
+        try:
+            level = models.level.objects.get(l_number=player.current_level)
+            return render(request, 'level.html', {'player': player, 'level': level})
+        except models.level.DoesNotExist:
+            if player.current_level > lastlevel:
+                return render(request, 'win.html', {'player': player})
+            return render(request, 'finish.html', {'player': player})
+
+    return render(request, 'index_page.html')
+
+'''
+
+
+
+class Index(APIView):
+
+	def get(self,request,format=None):
+		user = request.user
+		print(user)
+		return Response('idhwi')
+
+
+
+		# if user.is_authenticated:
+		# 	player = models.player.objects.get(user=user)
+		# 	try:
+		# 		level = Level.objects.get(level_number = player.current_level)
+		# 		res = {}
+		# 		res['player'] = player
+		# 		res['level'] = level
+		# 		return Response(res,status=200)
+		# 	except Level.DoesNotExist:
+		# 		if player.current_level > last_level:
+		# 			res = {}
+		# 			res['player'] = player
+		# 			res['level'] = 'win'
+		# 			return Response(res,status=200)
+		# 		else:
+		# 			res = {}
+		# 			res['player'] = player
+		# 			res['level'] = 'finish'
+		# 			return Response(res,status=200)
+
+		# return Response('index_page')
+			
 
 
 
@@ -73,4 +125,5 @@ class RegisterUser(APIView):
 
 
 
-
+##"EAAG8BjuZC4O8BABF9ZBDw0iCsYspf34reT2iTOa7ADcUBwcrGCoaV1iY1FCZApLHMTR4gABz2ZALeifwqPQ4fusD1lH4ZA77QKG5Mr9ZAzZCjZCnfxS2xI8mJiTs93sssOqczXVfGv718VK3yKIipvQkwSk8D2eiBZARmy3Hjj4LAiGg1ApnnR8BJoKSezytiLUkZALsobPKpKBQZDZD"
+##"EAAG8BjuZC4O8BALI31JjvDnVFPs51ZAmnxR7EcNbINju7xaO3pmZBXSzh2rPvg5eiBnmfHlUNFT8wZCKzSliOjZA1eV0OwmLmf4t5PuB14JffDFZAxUcNj4F2YQbux9LRwyu9JZBD1lZA5nhppbPbAD4M0sYPsfvXyw7R4PYQZAswwbLfP8a3NQG9G0f0UG5aCZClrWS4VFQ3AhgZDZD"

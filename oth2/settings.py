@@ -33,6 +33,9 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'core',
     'rest_framework',
+    'oauth2_provider',
+    'social_django',
+    'rest_framework_social_oauth2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -64,16 +68,25 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
 ]
 
+
+
 WSGI_APPLICATION = 'oth2.wsgi.application'
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    
+    'social_django.context_processors.backends',
+    'social_django.context_processors.login_redirect',
+)
 
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+
+
 
 DATABASES = {
     'default': {
@@ -83,8 +96,7 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -102,12 +114,32 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# AUTHENTICATION_BACKENDS = (
-#     'django.contrib.auth.backends.ModelBackend',
-#     )
+REST_FRAMEWORK = {
+    
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+    
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  
+        'rest_framework_social_oauth2.authentication.SocialAuthentication',
+    ),
+}
 
-# Internationalization
-# https://docs.djangoproject.com/en/2.0/topics/i18n/
+AUTHENTICATION_BACKENDS = (
+    'rest_framework_social_oauth2.backends.DjangoOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+    'social_core.backends.facebook.FacebookAppOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+    )
+
+# Facebook configuration
+SOCIAL_AUTH_FACEBOOK_KEY = '488209934967023'
+SOCIAL_AUTH_FACEBOOK_SECRET = '477b9d18185fcc21e74828a520c053b6'
+
+# Define SOCIAL_AUTH_FACEBOOK_SCOPE to get extra permissions from facebook. Email is not sent by default, to get it, you must request the email permission:
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id, name, email'
+}
+
 
 LANGUAGE_CODE = 'en-us'
 
