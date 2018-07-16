@@ -13,17 +13,21 @@ from datetime import datetime
 class Leaderboard(APIView):
 
 	def get(self,request,format=None):
-		player_rank_list = Player.objects.order_by('-score','timestamp')
-		rank_counter = 1
 
-		for player in player_rank_list :
-			player.rank = rank_counter
-			player.save()
-			rank_counter += 1
+		user = request.user
+		if user.is_authenticated:
+			player_rank_list = Player.objects.order_by('-score','timestamp')
+			rank_counter = 1
 
-		players = Player.objects.all()
-		serializer = LeaderboardSerializer(players,many=True)
-		return Response(serializer.data)
+			for player in player_rank_list :
+				player.rank = rank_counter
+				player.save()
+				rank_counter += 1
+
+			players = Player.objects.all()
+			serializer = LeaderboardSerializer(players,many=True)
+			return Response(serializer.data)
+		return Response("Unauthenticated")
 
 
 
@@ -31,7 +35,10 @@ class Leaderboard(APIView):
 class Rules(APIView):
 
 	def get(self,request,format=None):
-		return Response('Rules')
+		user = request.user
+		if user.is_authenticated:
+			return Response('Rules')
+		return Response("Unauthenticated")
 
 
 
@@ -57,73 +64,67 @@ class RegisterUser(APIView):
 
 	
 
-
-'''
-
-def index(request):
-
-    m_level = models.total_level.objects.get(id=1)
-    lastlevel = m_level.totallevel
-    
-    user = request.user
-    print(user)
-    if user.is_authenticated:
-        player = models.player.objects.get(user_id=request.user.pk)
-        try:
-            level = models.level.objects.get(l_number=player.current_level)
-            return render(request, 'level.html', {'player': player, 'level': level})
-        except models.level.DoesNotExist:
-            if player.current_level > lastlevel:
-                return render(request, 'win.html', {'player': player})
-            return render(request, 'finish.html', {'player': player})
-
-    return render(request, 'index_page.html')
-
-'''
-
-
-
 class Index(APIView):
 
 	def get(self,request,format=None):
+
+		last_level = TotalLevel.objects.filter(id=1).first().total_level
 		user = request.user
-		print(user)
-		return Response('idhwi')
+		if user.is_authenticated:
+			player = Player.objects.filter(user=user).first()
+			try:
+				level = Level.objects.filter(level_number=player.current_level)
+				return Response("level")
+			except Level.DoesNotExist:
+				if player.current_level > last_level:
+					return Response("win")
+				return Response("finish")
+		return Response("index")
 
 
 
-		# if user.is_authenticated:
-		# 	player = models.player.objects.get(user=user)
-		# 	try:
-		# 		level = Level.objects.get(level_number = player.current_level)
-		# 		res = {}
-		# 		res['player'] = player
-		# 		res['level'] = level
-		# 		return Response(res,status=200)
-		# 	except Level.DoesNotExist:
-		# 		if player.current_level > last_level:
-		# 			res = {}
-		# 			res['player'] = player
-		# 			res['level'] = 'win'
-		# 			return Response(res,status=200)
-		# 		else:
-		# 			res = {}
-		# 			res['player'] = player
-		# 			res['level'] = 'finish'
-		# 			return Response(res,status=200)
+class Answer(APIView):
 
-		# return Response('index_page')
-			
+	def post(self,request,format=None):
+
+		last_level = TotalLevel.objects.filter(id=1).first()
+		ans = request.data['ans']
+		user = request.user
+		if user.is_authenticated:
+			player = Player.objects.filter(user=user).first()
+			try:
+				level = Level.objects.filter(level_number=player.current_level)
+			except Level.DoesNotExist:
+				if player.current_level > last_level:
+					return Response("win")
+				return Response("finish")
+
+			if ans == level.answer:
+				player.current_level = player.current_level + 1
+				player.score = player.score + 10
+				player.timestamp = datetime.now
+				level.number_of_user = level.number_of_user + 1
+				level.accuracy = round(level.number_of_user/(float(level.number_of_user + level.wrong)),2)
+				level.save()
+				player.save()
+				try:
+					level = Level.objects.filter(level_number=player.current_level).first()
+					return render(request, 'level_transition.html')
+					return Response("level")
+				except:
+					if player.current_level > last_level:
+						return Response("win") 
+					return Response("finish")
+
+			elif ans == "":
+				pass
+
+			else:
+				level.wrong = level.wrong + 1
+				level.save()
+		return Response("Unauthorized")
 
 
 
 
 
-
-
-
-
-
-
-##"EAAG8BjuZC4O8BABF9ZBDw0iCsYspf34reT2iTOa7ADcUBwcrGCoaV1iY1FCZApLHMTR4gABz2ZALeifwqPQ4fusD1lH4ZA77QKG5Mr9ZAzZCjZCnfxS2xI8mJiTs93sssOqczXVfGv718VK3yKIipvQkwSk8D2eiBZARmy3Hjj4LAiGg1ApnnR8BJoKSezytiLUkZALsobPKpKBQZDZD"
-##"EAAG8BjuZC4O8BALI31JjvDnVFPs51ZAmnxR7EcNbINju7xaO3pmZBXSzh2rPvg5eiBnmfHlUNFT8wZCKzSliOjZA1eV0OwmLmf4t5PuB14JffDFZAxUcNj4F2YQbux9LRwyu9JZBD1lZA5nhppbPbAD4M0sYPsfvXyw7R4PYQZAswwbLfP8a3NQG9G0f0UG5aCZClrWS4VFQ3AhgZDZD"
